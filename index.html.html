@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KEENAN'S 21ST BIRTHDAY | DAY OF GOOD VIBES</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  
+  <!-- Google Fonts: Syncopate & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Syncopate:wght@400;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Syncopate', 'sans-serif'],
+            body: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            obsidian: '#09090b',
+            charcoal: '#18181b',
+            silverLight: '#f8fafc',
+            silverMid: '#cbd5e1',
+            silverDark: '#64748b',
+            metallic: '#e2e8f0',
+          },
+          animation: {
+            'pulse-glow': 'pulseGlow 2s infinite alternate',
+            'neon-pulse': 'neonPulse 3s infinite alternate',
+          },
+          keyframes: {
+            pulseGlow: {
+              '0%': { boxShadow: '0 0 15px rgba(226, 232, 240, 0.2)' },
+              '100%': { boxShadow: '0 0 35px rgba(226, 232, 240, 0.6)' },
+            },
+            neonPulse: {
+              '0%': { textShadow: '0 0 10px rgba(255,255,255,0.4), 0 0 20px rgba(203,213,225,0.3), 0 0 40px rgba(148,163,184,0.2)' },
+              '100%': { textShadow: '0 0 20px rgba(255,255,255,0.8), 0 0 40px rgba(203,213,225,0.6), 0 0 80px rgba(148,163,184,0.4)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #09090b;
+      color: #f8fafc;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    .silver-text-gradient {
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .glass-card {
+      background: rgba(24, 24, 27, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transform: scale(var(--bass-scale, 1));
+      transition: transform 0.05s ease-out, border-color 0.3s ease;
+    }
+    
+    .bg-grid {
+      background-size: 40px 40px;
+      background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
+    
+    .text-glow {
+      text-shadow: 0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(203,213,225,0.2);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #09090b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #3f3f46;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #71717a;
+    }
+  </style>
+</head>
+<body class="min-h-screen relative selection:bg-slate-300 selection:text-black bg-grid flex flex-col justify-between">
+
+  <!-- AUDIO ELEMENT (Using standard reliable stream fallback + your track) -->
+  <audio id="bgMusic" loop preload="auto">
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Floating Audio Control (Hidden until unlocked) -->
+  <button id="audioToggle" class="fixed bottom-6 right-6 z-50 w-12 h-12 bg-slate-800/80 backdrop-blur border border-slate-600 rounded-full flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700 transition-all shadow-lg opacity-0 hidden cursor-pointer">
+    <i class="fas fa-volume-up"></i>
+  </button>
+
+  <!-- Particle Canvas -->
+  <canvas id="particleCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+  <!-- Audio Reactive Main Background Orbs -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div id="mainOrb1" class="absolute -top-1/4 -left-1/4 w-[600px] h-[600px] bg-slate-500/20 rounded-full blur-[120px] transition-transform duration-75"></div>
+    <div id="mainOrb2" class="absolute -bottom-1/4 -right-1/4 w-[600px] h-[600px] bg-slate-300/10 rounded-full blur-[120px] transition-transform duration-75"></div>
+  </div>
+
+  <!-- LANDING / UNLOCK OVERLAY SCREEN -->
+  <div id="unlockOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-obsidian bg-grid p-4 sm:p-6 text-center transition-opacity duration-700 relative overflow-hidden">
+    
+    <!-- Animated Background Orbs -->
+    <div class="absolute top-1/4 -left-1/4 md:left-1/4 w-[500px] h-[500px] bg-slate-600/20 rounded-full blur-[100px] animate-pulse pointer-events-none"></div>
+    <div class="absolute bottom-1/4 -right-1/4 md:right-1/4 w-[500px] h-[500px] bg-slate-400/10 rounded-full blur-[100px] animate-pulse pointer-events-none" style="animation-delay: 1.5s;"></div>
+
+    <div class="max-w-xl w-full glass-card p-8 sm:p-12 rounded-3xl border border-slate-600/50 shadow-[0_0_50px_rgba(0,0,0,0.6)] relative overflow-hidden transform transition-all hover:scale-[1.02] duration-500 flex flex-col justify-between min-h-[500px]">
+      
+      <!-- Giant Faint 21 Watermark -->
+      <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] select-none">
+        <span class="text-[12rem] sm:text-[18rem] font-black font-display text-white leading-none">21</span>
+      </div>
+
+      <div>
+        <!-- Decorative Top Line -->
+        <div class="w-16 h-1 bg-gradient-to-r from-transparent via-slate-400 to-transparent mx-auto mb-6"></div>
+
+        <p class="text-slate-400 text-xs sm:text-sm tracking-[0.3em] uppercase font-bold mb-3 drop-shadow-md">You Are Invited To</p>
+        
+        <h1 class="text-4xl sm:text-6xl font-black font-display tracking-tight text-white mb-2 text-glow relative z-10">
+          KEENAN'S
+        </h1>
+        
+        <p class="text-xl sm:text-3xl font-extrabold silver-text-gradient font-display mb-6 tracking-widest relative z-10">
+          21ST BIRTHDAY
+        </p>
+        
+        <div class="bg-black/50 border border-slate-700/50 rounded-xl p-4 mb-8 mx-auto max-w-sm backdrop-blur-md relative z-10 shadow-inner">
+          <p class="text-slate-200 text-sm sm:text-base font-light italic leading-relaxed">
+            "A Day of Good Vibes, Love, Laughter and Unforgettable Memories"
+          </p>
+        </div>
+      </div>
+
+      <div>
+        <button id="openInviteBtn" class="relative group w-full sm:w-auto px-10 py-5 bg-white text-black font-extrabold text-sm sm:text-base tracking-[0.2em] uppercase rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.5)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 flex items-center justify-center mx-auto space-x-3 z-10 overflow-hidden">
+          <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-slate-200 via-white to-slate-200 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <span class="relative flex items-center font-display">
+            OPEN INVITATION <i class="fas fa-unlock-alt ml-3 text-lg"></i>
+          </span>
+        </button>
+
+        <!-- Anchored Bottom Sound Hint -->
+        <div class="mt-8 pt-4 border-t border-slate-800/80 flex items-center justify-center space-x-2 text-slate-400 text-xs sm:text-sm tracking-[0.15s] font-bold uppercase animate-bounce">
+          <i class="fas fa-volume-up text-slate-300"></i>
+          <span>Turn on sound for the best experience</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main id="mainContent" class="opacity-0 transition-opacity duration-1000 py-16 px-4 sm:px-8 max-w-5xl mx-auto space-y-20 relative z-10 w-full flex-grow">
+
+    <!-- HERO SECTION WITH GLOWING NEON EFFECT -->
+    <section class="text-center space-y-6 pt-8">
+      <div class="inline-block px-4 py-1.5 rounded-full border border-slate-500/40 bg-slate-900/60 text-slate-300 text-xs font-semibold tracking-widest uppercase mb-2 shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+        <i class="fas fa-crown mr-1.5 text-slate-300"></i> OFFICIAL 21ST CELEBRATION
+      </div>
+      
+      <!-- Updated Heading to KEENAN'S with Glowing Neon Pulse -->
+      <h1 class="text-6xl sm:text-8xl md:text-9xl font-black font-display tracking-tight text-white leading-none animate-neon-pulse relative inline-block">
+        KEENAN'S
+        <div class="absolute inset-0 bg-slate-200/10 blur-3xl -z-10 rounded-full"></div>
+      </h1>
+      
+      <h2 class="text-2xl sm:text-4xl font-bold font-display silver-text-gradient tracking-wide uppercase">
+        DAY OF GOOD VIBES
+      </h2>
+
+      <p class="max-w-2xl mx-auto text-slate-300 text-base sm:text-xl font-light leading-relaxed">
+        Join us for an unforgettable experience celebrating Keenan turning 21. Great company, love, laughter, and lasting memories.
+      </p>
+
+      <!-- Live Countdown Clock -->
+      <div class="pt-6">
+        <p class="text-slate-400 text-xs tracking-widest font-semibold uppercase mb-4">COUNTDOWN TO THE EVENT</p>
+        <div id="countdown" class="grid grid-cols-4 gap-3 max-w-lg mx-auto">
+          <div class="glass-card p-3 sm:p-4 rounded-xl text-center border border-slate-700/50">
+            <span id="days" class="block text-2xl sm:text-4xl font-extrabold font-display text-white">00</span>
+            <span class="text-[10px] sm:text-xs text-slate-400 font-semibold uppercase">Days</span>
+          </div>
+          <div class="glass-card p-3 sm:p-4 rounded-xl text-center border border-slate-700/50">
+            <span id="hours" class="block text-2xl sm:text-4xl font-extrabold font-display text-white">00</span>
+            <span class="text-[10px] sm:text-xs text-slate-400 font-semibold uppercase">Hours</span>
+          </div>
+          <div class="glass-card p-3 sm:p-4 rounded-xl text-center border border-slate-700/50">
+            <span id="minutes" class="block text-2xl sm:text-4xl font-extrabold font-display text-white">00</span>
+            <span class="text-[10px] sm:text-xs text-slate-400 font-semibold uppercase">Mins</span>
+          </div>
+          <div class="glass-card p-3 sm:p-4 rounded-xl text-center border border-slate-700/50">
+            <span id="seconds" class="block text-2xl sm:text-4xl font-extrabold font-display text-white">00</span>
+            <span class="text-[10px] sm:text-xs text-slate-400 font-semibold uppercase">Secs</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EVENT DETAILS SECTION -->
+    <section class="grid md:grid-cols-3 gap-6">
+      
+      <!-- Date & Time -->
+      <div class="glass-card p-8 rounded-2xl border border-slate-800 hover:border-slate-500 transition-all duration-300 group">
+        <div class="w-12 h-12 rounded-xl bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-200 text-xl mb-6 group-hover:scale-110 transition-transform">
+          <i class="far fa-calendar-alt"></i>
+        </div>
+        <h3 class="text-xl font-bold font-display text-white mb-2">WHEN</h3>
+        <p class="text-slate-200 font-semibold text-lg">Sunday, 27th December</p>
+        <p class="text-slate-400 text-sm mt-1">Starts at 3:00 PM</p>
+      </div>
+
+      <!-- Venue & Location -->
+      <div class="glass-card p-8 rounded-2xl border border-slate-800 hover:border-slate-500 transition-all duration-300 group">
+        <div class="w-12 h-12 rounded-xl bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-200 text-xl mb-6 group-hover:scale-110 transition-transform">
+          <i class="fas fa-map-marker-alt"></i>
+        </div>
+        <h3 class="text-xl font-bold font-display text-white mb-2">WHERE</h3>
+        <p class="text-slate-200 font-semibold text-base leading-snug">44 Edgebury Road, Eastbury</p>
+        <p class="text-slate-400 text-sm">Phoenix, 4068</p>
+        <a href="https://maps.google.com/?q=44+Edgebury+Road,+Eastbury,+Phoenix,+4068" target="_blank" class="inline-flex items-center space-x-2 text-xs font-bold text-slate-300 hover:text-white mt-4 underline decoration-slate-500">
+          <span>Get Directions</span>
+          <i class="fas fa-external-link-alt text-[10px]"></i>
+        </a>
+      </div>
+
+      <!-- Dress Code -->
+      <div class="glass-card p-8 rounded-2xl border border-slate-800 hover:border-slate-500 transition-all duration-300 group">
+        <div class="w-12 h-12 rounded-xl bg-slate-800 border border-slate-600 flex items-center justify-center text-slate-200 text-xl mb-6 group-hover:scale-110 transition-transform">
+          <i class="fas fa-user-ninja"></i>
+        </div>
+        <h3 class="text-xl font-bold font-display text-white mb-2">DRESS CODE</h3>
+        <p class="text-slate-200 font-bold text-lg silver-text-gradient">FULL BLACK ATTIRE</p>
+        <p class="text-slate-400 text-sm mt-1">Sleek, monochrome, and stylish.</p>
+      </div>
+
+    </section>
+
+    <!-- RSVP FORM SECTION -->
+    <section id="rsvpSection" class="glass-card p-8 sm:p-12 rounded-3xl border border-slate-700/60 shadow-2xl relative overflow-hidden">
+      <div class="max-w-2xl mx-auto space-y-8">
+        
+        <div class="text-center space-y-2">
+          <h2 class="text-3xl sm:text-4xl font-extrabold font-display text-white">RSVP NOW</h2>
+          <p class="text-slate-400 text-sm">Confirm your spot for Keenan's 21st Birthday</p>
+        </div>
+
+        <form id="rsvpForm" class="space-y-6">
+          <div>
+            <label class="block text-xs font-bold tracking-wider text-slate-300 uppercase mb-2">Full Name *</label>
+            <input type="text" id="guestName" required placeholder="Enter your full name" class="w-full px-4 py-3.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-slate-300 transition">
+          </div>
+
+          <div class="grid sm:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-xs font-bold tracking-wider text-slate-300 uppercase mb-2">Attending? *</label>
+              <select id="attendance" required class="w-full px-4 py-3.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white focus:outline-none focus:border-slate-300 transition">
+                <option value="Yes">Yes, I'll be there!</option>
+                <option value="No">Sorry, can't make it</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold tracking-wider text-slate-300 uppercase mb-2">The number of guests accompanied by *</label>
+              <select id="guestCount" required class="w-full px-4 py-3.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white focus:outline-none focus:border-slate-300 transition">
+                <option value="1">1 Person</option>
+                <option value="2">2 People</option>
+                <option value="3">3 People</option>
+                <option value="4">4 People</option>
+                <option value="5">5 People</option>
+                <option value="6">6 People</option>
+                <option value="7">7 People</option>
+                <option value="8">8 People</option>
+                <option value="9">9 People</option>
+                <option value="10">10 People</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- New Song Request Field -->
+          <div>
+            <label class="block text-xs font-bold tracking-wider text-slate-300 uppercase mb-2">Request a song to be played (Optional)</label>
+            <input type="text" id="songRequest" placeholder="e.g. Drake - God's Plan" class="w-full px-4 py-3.5 rounded-xl bg-slate-900/90 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-slate-300 transition">
+          </div>
+
+          <button type="submit" id="submitBtn" class="w-full py-4 bg-slate-100 hover:bg-white text-black font-extrabold font-display tracking-wider text-sm rounded-xl shadow-xl transition transform active:scale-98">
+            CONFIRM RSVP
+          </button>
+        </form>
+
+        <!-- Success Message -->
+        <div id="rsvpSuccess" class="hidden text-center p-8 bg-slate-900/95 border border-slate-500 rounded-2xl space-y-4">
+          <div class="w-16 h-16 bg-slate-200 text-black rounded-full flex items-center justify-center text-2xl font-bold mx-auto">
+            <i class="fas fa-check"></i>
+          </div>
+          <h3 class="text-2xl font-bold font-display text-white">RSVP RECEIVED!</h3>
+          <p class="text-slate-300 text-sm max-w-md mx-auto">Thank you for confirming! Your details have been saved to the guest list. We can't wait to celebrate Keenan's 21st Birthday with you.</p>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="text-center py-8 text-slate-500 text-xs space-y-2 border-t border-slate-800/80 bg-obsidian/80 relative z-10 w-full">
+    <p class="font-display font-bold text-slate-400">KEENAN'S 21ST BIRTHDAY CELEBRATION</p>
+    <p>44 Edgebury Road, Eastbury, Phoenix, 4068</p>
+  </footer>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // --- GOOGLE APPS SCRIPT WEBHOOK URL ---
+    const GOOGLE_SHEET_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxtk2ybztA8vZ010kqZUUwNdHMkKI6o_wlahJ2IqNfB_D-VMa5yqnl6fZ12NT8RwPPAfA/exec';
+
+    // --- DOM ELEMENTS ---
+    const openInviteBtn = document.getElementById('openInviteBtn');
+    const unlockOverlay = document.getElementById('unlockOverlay');
+    const mainContent = document.getElementById('mainContent');
+    const bgMusic = document.getElementById('bgMusic');
+    const audioToggle = document.getElementById('audioToggle');
+    let isPlaying = false;
+
+    // --- LANDING OVERLAY UNLOCK & PLAY MUSIC ---
+    openInviteBtn.addEventListener('click', () => {
+      unlockOverlay.classList.add('opacity-0');
+      
+      // Play audio reliably
+      bgMusic.play().then(() => {
+        isPlaying = true;
+        audioToggle.classList.remove('opacity-0', 'hidden');
+      }).catch(err => {
+        console.log("Audio autoplay was prevented by browser:", err);
+      });
+
+      setTimeout(() => {
+        unlockOverlay.classList.add('hidden');
+        mainContent.classList.remove('opacity-0');
+      }, 700);
+
+      // Trigger Celebration Confetti
+      triggerSilverConfetti();
+    });
+
+    // --- AUDIO MUTE/UNMUTE TOGGLE ---
+    audioToggle.addEventListener('click', () => {
+      if (isPlaying) {
+        bgMusic.pause();
+        audioToggle.innerHTML = '<i class="fas fa-volume-mute"></i>';
+      } else {
+        bgMusic.play();
+        audioToggle.innerHTML = '<i class="fas fa-volume-up"></i>';
+      }
+      isPlaying = !isPlaying;
+    });
+
+    // --- SILVER CONFETTI BURST ---
+    function triggerSilverConfetti() {
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#ffffff', '#cbd5e1', '#94a3b8', '#64748b']
+        });
+      }
+    }
+
+    // --- RSVP FORM SUBMISSION TO GOOGLE SHEETS ---
+    const rsvpForm = document.getElementById('rsvpForm');
+    const rsvpSuccess = document.getElementById('rsvpSuccess');
+    const submitBtn = document.getElementById('submitBtn');
+
+    rsvpForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('guestName').value;
+      const attendance = document.getElementById('attendance').value;
+      const guestCount = document.getElementById('guestCount').value;
+      const songRequest = document.getElementById('songRequest').value;
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "SENDING RSVP...";
+
+      const payload = {
+        name: name,
+        attendance: attendance,
+        guestCount: guestCount,
+        songRequest: songRequest,
+        timestamp: new Date().toISOString()
+      };
+
+      // Send RSVP data to Google Sheets App Script
+      fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      }).then(() => {
+        rsvpForm.classList.add('hidden');
+        rsvpSuccess.classList.remove('hidden');
+        triggerSilverConfetti();
+      }).catch(err => {
+        console.error('Error submitting RSVP:', err);
+        rsvpForm.classList.add('hidden');
+        rsvpSuccess.classList.remove('hidden');
+        triggerSilverConfetti();
+      });
+    });
+
+    // --- LIVE COUNTDOWN TIMER (27 Dec 2026, 3:00 PM) ---
+    const targetDate = new Date("December 27, 2026 15:00:00").getTime();
+
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const difference = targetDate - now;
+
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        document.getElementById('days').innerText = String(days).padStart(2, '0');
+        document.getElementById('hours').innerText = String(hours).padStart(2, '0');
+        document.getElementById('minutes').innerText = String(minutes).padStart(2, '0');
+        document.getElementById('seconds').innerText = String(seconds).padStart(2, '0');
+      }
+    }
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    // --- CANVAS BACKGROUND PARTICLES ---
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const particles = [];
+    for (let i = 0; i < 50; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 1.5 + 0.5,
+        speedX: (Math.random() - 0.5) * 0.3,
+        speedY: (Math.random() - 0.5) * 0.3,
+        alpha: Math.random() * 0.5 + 0.2
+      });
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach(p => {
+        p.x += p.speedX;
+        p.y += p.speedY;
+
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(226, 232, 240, ${p.alpha})`;
+        ctx.fill();
+      });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+  </script>
+</body>
+</html>
